@@ -1,0 +1,19 @@
+{
+  "name": "observable-playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rm -f ./output/match/* ; rm -f ./output/no_match/* ",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tensorflow/tfjs-node": "^0.1.19",
+    "@tensorflow/tfjs-node-gpu": "0.1.21",
+    "canvas": "^2.0.1",
+    "face-api.js": "^0.16.1",
+    "rxjs": "^6.3.3"
+  }
+}
