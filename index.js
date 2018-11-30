@@ -2,6 +2,7 @@ const fs = require('fs')
 // const path = require('path')
 const faceapi = require('face-api.js')
 const canvas = require('canvas')
+const { performance } = require('perf_hooks')
 
 // needed for acceleration
 require('@tensorflow/tfjs-node')
@@ -60,9 +61,13 @@ const fullPath = (dir) => (filename) => `${dir}/${filename}`
 async function main() {
   await loadWeights()
 
+  const startTime = performance.now()
+
   // create a face matcher for the reference image
   const referenceLandmarkResults = await createFaceRecognitionTask(REFERENCE_IMAGE)
   const faceMatcher = new faceapi.FaceMatcher(referenceLandmarkResults)
+
+  console.log(`Matcher for reference image '${REFERENCE_IMAGE}' created.`)
 
   const inputDir = './input'
   const outputMatchDir = './output/match'
@@ -94,17 +99,26 @@ async function main() {
     return [inputFilePath, noMatchOutputPath]
   }
 
+  // how many images to process at once
+  const concurrent = 1
+
+  // used to monitor performance/timing
+  const resultSelector = (currentImage, result) => {
+    const time = ((performance.now() - startTime) / 1000).toPrecision(2)
+    console.log(`Image '${currentImage}' processed after '${time}' seconds`)
+    return result
+  }
+
   // get the list of files in the `input` directory
   const filelist = await readDir(inputDir)
 
   // run the matching pipeline and move the files based on whether they match the reference image
   const fileCopyObservable = from(filelist).pipe(
-    flatMap(toInputOutputFilenamePair),
+    flatMap(toInputOutputFilenamePair, resultSelector, concurrent),
     map(copy),
     mergeAll()
   )
 
-  const onEachImage = () => console.log('foo')
   const onError = (err) => console.log(`Error: `, { err })
   const onDone = () => console.log(`done`)
 
